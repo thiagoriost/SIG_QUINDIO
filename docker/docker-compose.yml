@@ -1,0 +1,49 @@
+services:
+
+  directus:
+
+    build:
+      context: ../
+      dockerfile: docker/directus/Dockerfile
+
+    container_name: directus-sigquindio
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    volumes:
+      - ../directus/uploads:/app/uploads
+      - ../directus/extensions:/app/extensions
+
+    expose:
+      - "8055"
+
+    networks:
+      - sig-network
+
+
+  nginx:
+
+    image: nginx:alpine
+
+    container_name: nginx-sigquindio
+
+    restart: unless-stopped
+
+    ports:
+      - "8055:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+    depends_on:
+      - directus
+
+    networks:
+      - sig-network
+
+
+networks:
+  sig-network:
