@@ -24,6 +24,111 @@ services:
       - sig-network
 
 
+  mapoteca-api:
+
+    build:
+      context: ../mapoteca-api
+      dockerfile: Dockerfile
+
+    container_name: mapoteca-api-sigquindio
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      PORT: ${MAPOTECA_API_PORT}
+      NODE_ENV: ${MAPOTECA_API_NODE_ENV}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED}
+      DIRECTUS_TIMEOUT: ${DIRECTUS_TIMEOUT}
+      DIRECTUS_URL: ${DIRECTUS_URL}
+      DIRECTUS_ROOT_FOLDER: ${DIRECTUS_ROOT_FOLDER}
+      DIRECTUS_USER: ${DIRECTUS_USER}
+      DIRECTUS_PASSWORD: ${DIRECTUS_PASSWORD}
+
+    expose:
+      - "${MAPOTECA_API_PORT}"
+
+    depends_on:
+      - directus
+
+    networks:
+      - sig-network
+
+
+  mapoteca-front:
+
+    build:
+      context: ../Mapoteca_sig-quindio-react-completo
+      dockerfile: Dockerfile
+      args:
+        VITE_MAPOTECA_PUBLIC_ORIGIN: ${VITE_MAPOTECA_PUBLIC_ORIGIN}
+        VITE_MAPOTECA_API_BASE: ${VITE_MAPOTECA_API_BASE}
+        VITE_ADMIN_URL: ${VITE_ADMIN_URL}
+        VITE_VISOR_URL: ${VITE_VISOR_URL}
+
+    container_name: mapoteca-front-sigquindio
+
+    restart: unless-stopped
+
+    expose:
+      - "80"
+
+    networks:
+      - sig-network
+
+
+  visit-counter:
+
+    build:
+      context: ../visit-counter-backend
+      dockerfile: Dockerfile
+
+    container_name: visit-counter-sigquindio
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      PORT: ${VISIT_HTTPS_PORT}
+      HTTP_PORT: ${VISIT_HTTP_PORT}
+      ADMIN_SECRET_TOKEN: ${ADMIN_SECRET_TOKEN}
+      SSL_KEY_PATH: ${SSL_KEY_PATH}
+      SSL_CERT_PATH: ${SSL_CERT_PATH}
+      SSL_CA_PATH: ${SSL_CA_PATH}
+
+    volumes:
+      - ../visit-counter-backend/data:/app/data
+      - ../visit-counter-backend/certs:/app/certs:ro
+
+    expose:
+      - "${VISIT_HTTP_PORT}"
+      - "${VISIT_HTTPS_PORT}"
+
+    networks:
+      - sig-network
+
+
+  visor:
+
+    build:
+      context: ../Visor
+      dockerfile: Dockerfile
+
+    container_name: visor-sigquindio
+
+    restart: unless-stopped
+
+    expose:
+      - "80"
+
+    networks:
+      - sig-network
+
+
   nginx:
 
     image: nginx:alpine
@@ -36,10 +141,14 @@ services:
       - "8055:80"
 
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
     depends_on:
       - directus
+      - mapoteca-api
+      - mapoteca-front
+      - visit-counter
+      - visor
 
     networks:
       - sig-network
@@ -47,3 +156,4 @@ services:
 
 networks:
   sig-network:
+    driver: bridge
