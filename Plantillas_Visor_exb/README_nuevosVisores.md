@@ -1,0 +1,1 @@
+Toda nueva plantilla se debe descomprimir y ser enviada a remplazar en la carperta visor, monitorear los cambios como el del cdn 32 que se debe mantener, finalmente ya con el visor ajustado a produccion se debe volver a empaquetar y enviar a Monica.
